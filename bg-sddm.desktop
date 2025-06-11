@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=BG-SDDM
+Comment=Cambiar Background de SDDM
+Exec=python3 /home/rhythmcreative/BG-SDDM/bg_sddm.py
+Icon=preferences-desktop-wallpaper
+Terminal=false
+Type=Application
+Categories=System;Settings;
+Keywords=sddm;background;wallpaper;login;screen;
+
