@@ -84,6 +84,32 @@ echo "1. Desde terminal: python3 $(pwd)/bg_sddm.py"
 echo "2. Desde Rofi: busca 'BG-SDDM'"
 echo "3. Desde el menú de aplicaciones"
 echo ""
-echo "Nota: Para modificar archivos del sistema, ejecuta con permisos de administrador:"
-echo "sudo python3 $(pwd)/bg_sddm.py"
 echo ""
+echo "Configurando permisos sudoers para BG-SDDM..."
+SUDOERS_FILE="/etc/sudoers.d/bg-sddm"
+CURRENT_USER=$(whoami)
+
+# Crear archivo temporal con la configuración sudoers
+cat > /tmp/bg-sddm-sudoers << EOF
+# Permitir al usuario $CURRENT_USER ejecutar comandos específicos de BG-SDDM sin contraseña
+# Esto permite copiar archivos al directorio de temas SDDM sin autenticación
+$CURRENT_USER ALL=(ALL) NOPASSWD: /usr/bin/cp * /usr/share/sddm/themes/sddm-astronaut-theme/Themes/theme1.conf
+$CURRENT_USER ALL=(ALL) NOPASSWD: /usr/bin/cp * /usr/share/sddm/themes/sddm-astronaut-theme/Backgrounds/*
+EOF
+
+# Copiar el archivo sudoers con los permisos correctos
+sudo cp /tmp/bg-sddm-sudoers "$SUDOERS_FILE"
+sudo chmod 0440 "$SUDOERS_FILE"
+sudo chown root:root "$SUDOERS_FILE"
+
+# Limpiar archivo temporal
+rm /tmp/bg-sddm-sudoers
+
+# Verificar que el archivo sudoers es válido
+if sudo visudo -c; then
+    echo "✓ Configuración sudoers instalada correctamente"
+    echo "  Ahora puedes cambiar fondos sin introducir contraseña"
+else
+    echo "⚠️  Error en la configuración sudoers, eliminando archivo..."
+    sudo rm -f "$SUDOERS_FILE"
+fi

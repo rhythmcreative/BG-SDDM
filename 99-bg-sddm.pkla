@@ -1,0 +1,15 @@
+[Allow BG-SDDM file operations]
+Identity=unix-user:rhythmcreative
+Action=org.freedesktop.policykit.exec
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+
+[Allow cp command for BG-SDDM]
+Identity=unix-user:rhythmcreative
+Action=org.freedesktop.policykit.exec
+ResultAny=no
+ResultInactive=no
+ResultActive=yes
+AdminIdentities=unix-user:rhythmcreative
+

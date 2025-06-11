@@ -1,0 +1,5 @@
+# Permitir al usuario rhythmcreative ejecutar comandos específicos de BG-SDDM sin contraseña
+# Esto permite copiar archivos al directorio de temas SDDM sin autenticación
+rhythmcreative ALL=(ALL) NOPASSWD: /usr/bin/cp * /usr/share/sddm/themes/sddm-astronaut-theme/Themes/theme1.conf
+rhythmcreative ALL=(ALL) NOPASSWD: /usr/bin/cp * /usr/share/sddm/themes/sddm-astronaut-theme/Backgrounds/*
+

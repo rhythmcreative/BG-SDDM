@@ -18,6 +18,8 @@
 
 - 🎭 **Interfaz Moderna**: Diseñada con GTK4 y libadwaita para una experiencia nativa
 - 🖼️ **Vista Previa Intuitiva**: Visualiza todas las imágenes disponibles en una galería elegante
+- 🔐 **Sin Contraseña**: Configuración automática de sudoers para cambiar fondos sin autenticación
+- ⚡ **Instalación Automática**: Script de instalación que configura todo automáticamente
 - ➕ **Gestión de Imágenes**: Añade, visualiza y gestiona fondos fácilmente
 - 🔄 **Actualización Automática**: Configuración instantánea sin reiniciar servicios
 - 📱 **Integración Completa**: Compatible con Rofi, menús de aplicaciones y terminal

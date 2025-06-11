@@ -173,6 +173,7 @@ class SDDMBackgroundChanger(Gtk.Application):
         .image-container:hover {{
             background-color: {colors['accent']};
             background-image: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.1));
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }}
         
         .image-container.current {{
@@ -240,6 +241,46 @@ class SDDMBackgroundChanger(Gtk.Application):
         button.add-button:hover {{
             background: {colors['accent']};
             opacity: 0.8;
+        }}
+        
+        /* Delete button styling */
+        .delete-button {{
+            background: rgba(255, 71, 87, 0.9);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 6px;
+            font-size: 14px;
+            font-weight: normal;
+            opacity: 0.0;
+            margin: 4px;
+        }}
+        
+        .image-container:hover .delete-button {{
+            opacity: 1.0;
+        }}
+        
+        .delete-button:hover {{
+            background: rgba(255, 71, 87, 0.9);
+            color: white;
+            border: none;
+            opacity: 1.0;
+        }}
+        
+        .delete-button:active {{
+            background: rgba(255, 55, 66, 1.0);
+            color: white;
+        }}
+        
+        /* Drag and drop styling */
+        .drop-target {{
+            border: 3px dashed {colors['accent']};
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.1);
+        }}
+        
+        .drag-highlight {{
+            background-color: rgba(100, 150, 255, 0.2);
         }}
         """
         
@@ -408,6 +449,9 @@ class SDDMWindow(Gtk.ApplicationWindow):
         self.flow_box.set_selection_mode(Gtk.SelectionMode.SINGLE)
         self.flow_box.connect('child-activated', self.on_image_selected)
         
+        # Setup drag and drop for the flow_box
+        self.setup_drag_and_drop()
+        
         scrolled.add(self.flow_box)
         main_box.pack_start(scrolled, True, True, 0)
         
@@ -463,14 +507,114 @@ class SDDMWindow(Gtk.ApplicationWindow):
             error_msg = f'Error al cargar imágenes: {str(e)}'
             print(f"Debug - {error_msg}")
             self.show_error_dialog(error_msg)
+    
+    def setup_drag_and_drop(self):
+        """Setup drag and drop functionality"""
+        # Set up the flow_box as a drop target
+        self.flow_box.drag_dest_set(
+            Gtk.DestDefaults.ALL,
+            [],
+            Gdk.DragAction.COPY
+        )
+        
+        # Add target for files
+        target_list = Gtk.TargetList.new([])
+        target_list.add_uri_targets(0)
+        target_list.add_text_targets(1)
+        self.flow_box.drag_dest_set_target_list(target_list)
+        
+        # Connect drag and drop signals
+        self.flow_box.connect('drag-data-received', self.on_drag_data_received)
+        self.flow_box.connect('drag-motion', self.on_drag_motion)
+        self.flow_box.connect('drag-leave', self.on_drag_leave)
+        
+    def on_drag_motion(self, widget, drag_context, x, y, time):
+        """Handle drag motion over the widget"""
+        # Add visual feedback
+        style_context = widget.get_style_context()
+        style_context.add_class('drag-highlight')
+        
+        # Accept the drag
+        Gdk.drag_status(drag_context, Gdk.DragAction.COPY, time)
+        return True
+        
+    def on_drag_leave(self, widget, drag_context, time):
+        """Handle drag leave"""
+        # Remove visual feedback
+        style_context = widget.get_style_context()
+        style_context.remove_class('drag-highlight')
+        
+    def on_drag_data_received(self, widget, drag_context, x, y, data, info, time):
+        """Handle dropped data"""
+        # Remove visual feedback
+        style_context = widget.get_style_context()
+        style_context.remove_class('drag-highlight')
+        
+        # Get the dropped data
+        uris = data.get_uris()
+        
+        if uris:
+            for uri in uris:
+                # Convert URI to local path
+                file_path = GLib.filename_from_uri(uri)[0]
+                
+                # Check if it's an image file
+                if file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
+                    self.add_dropped_image(file_path)
+                else:
+                    self.show_error_dialog(f'Archivo no válido: {os.path.basename(file_path)}\nSolo se permiten imágenes.')
+        
+        # Finish the drag
+        Gtk.drag_finish(drag_context, True, False, time)
+        
+    def add_dropped_image(self, source_path):
+        """Add a dropped image to the backgrounds folder"""
+        try:
+            filename = os.path.basename(source_path)
+            dest_path = os.path.join(self.backgrounds_path, filename)
+            
+            # Check if file already exists
+            if os.path.exists(dest_path):
+                dialog = Gtk.MessageDialog(
+                    transient_for=self,
+                    modal=True,
+                    message_type=Gtk.MessageType.QUESTION,
+                    buttons=Gtk.ButtonsType.YES_NO,
+                    text=f'La imagen "{filename}" ya existe.\n¿Deseas reemplazarla?'
+                )
+                response = dialog.run()
+                dialog.destroy()
+                
+                if response != Gtk.ResponseType.YES:
+                    return
+            
+            # Copy the file
+            try:
+                shutil.copy2(source_path, dest_path)
+                self.status_label.set_text(f'Imagen añadida: {filename}')
+                self.load_backgrounds()
+                
+            except PermissionError:
+                # Try using pkexec for copying file
+                if self.try_pkexec_copy(source_path, dest_path):
+                    self.status_label.set_text(f'Imagen añadida: {filename}')
+                    self.load_backgrounds()
+                else:
+                    self.show_error_dialog('Error de permisos. No se pudo copiar la imagen.')
+                    
+        except Exception as e:
+            self.show_error_dialog(f'Error al añadir imagen: {str(e)}')
             
     def add_image_to_grid(self, filename, is_current=False):
         """Añadir una imagen al grid"""
         image_path = os.path.join(self.backgrounds_path, filename)
         
-        # Container
-        container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        container.set_size_request(180, 140)
+        # Main container
+        main_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        main_container.set_size_request(180, 160)
+        
+        # Image container with overlay for delete button
+        image_overlay = Gtk.Overlay()
         
         # Imagen
         try:
@@ -481,25 +625,123 @@ class SDDMWindow(Gtk.ApplicationWindow):
             image = Gtk.Image.new_from_icon_name('image-x-generic', Gtk.IconSize.DIALOG)
             
         image.set_size_request(160, 90)
-        container.pack_start(image, False, False, 0)
+        image_overlay.add(image)
+        
+        # Delete button (only if not current background)
+        if not is_current:
+            delete_button = Gtk.Button()
+            delete_button.set_label('×')
+            delete_button.set_tooltip_text(f'Eliminar {filename}')
+            delete_button.set_size_request(24, 24)
+            delete_button.get_style_context().add_class('delete-button')
+            delete_button.set_halign(Gtk.Align.END)
+            delete_button.set_valign(Gtk.Align.START)
+            delete_button.set_margin_top(4)
+            delete_button.set_margin_end(4)
+            delete_button.connect('clicked', self.on_delete_image, filename)
+            image_overlay.add_overlay(delete_button)
+        
+        main_container.pack_start(image_overlay, False, False, 0)
         
         # Label con nombre
         label = Gtk.Label()
         label.set_text(filename)
         label.set_ellipsize(3)  # Pango.EllipsizeMode.END
         label.set_max_width_chars(20)
-        container.pack_start(label, False, False, 0)
+        main_container.pack_start(label, False, False, 0)
         
         # Indicador de imagen actual
         if is_current:
             current_label = Gtk.Label()
             current_label.set_markup('<span color="#4CAF50" weight="bold">● Actual</span>')
-            container.pack_start(current_label, False, False, 0)
+            main_container.pack_start(current_label, False, False, 0)
+        
+        # Setup hover effect
+        self.setup_hover_effect(main_container)
             
         # Guardar filename como data
-        container.filename = filename
+        main_container.filename = filename
         
-        self.flow_box.add(container)
+        self.flow_box.add(main_container)
+        
+    def setup_hover_effect(self, container):
+        """Setup hover effect for image containers"""
+        # Add CSS class for styling
+        container.get_style_context().add_class('image-container')
+        
+        # Connect mouse events
+        container.add_events(Gdk.EventMask.ENTER_NOTIFY_MASK | 
+                           Gdk.EventMask.LEAVE_NOTIFY_MASK)
+        container.connect('enter-notify-event', self.on_image_enter)
+        container.connect('leave-notify-event', self.on_image_leave)
+        
+    def on_image_enter(self, widget, event):
+        """Handle mouse enter on image"""
+        # The hover effect is handled by CSS, but we can add additional logic here if needed
+        return False
+        
+    def on_image_leave(self, widget, event):
+        """Handle mouse leave on image"""
+        # The hover effect is handled by CSS, but we can add additional logic here if needed
+        return False
+        
+    def on_delete_image(self, button, filename):
+        """Handle image deletion"""
+        # Confirm deletion
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            modal=True,
+            message_type=Gtk.MessageType.WARNING,
+            buttons=Gtk.ButtonsType.YES_NO,
+            text=f'¿Estás seguro de que quieres eliminar "{filename}"?'
+        )
+        dialog.format_secondary_text('Esta acción no se puede deshacer.')
+        
+        response = dialog.run()
+        dialog.destroy()
+        
+        if response == Gtk.ResponseType.YES:
+            self.delete_background_image(filename)
+            
+    def delete_background_image(self, filename):
+        """Delete a background image"""
+        try:
+            image_path = os.path.join(self.backgrounds_path, filename)
+            
+            # Check if this is the current background
+            current_bg = self.get_current_background()
+            if filename == current_bg:
+                self.show_error_dialog('No puedes eliminar el fondo de pantalla actual.\nPrimero cambia a otro fondo.')
+                return
+            
+            # Try to delete directly first
+            try:
+                os.remove(image_path)
+                self.status_label.set_text(f'Imagen eliminada: {filename}')
+                self.load_backgrounds()
+                
+            except PermissionError:
+                # Try using pkexec for deletion
+                if self.try_pkexec_delete(image_path):
+                    self.status_label.set_text(f'Imagen eliminada: {filename}')
+                    self.load_backgrounds()
+                else:
+                    self.show_error_dialog('Error de permisos. No se pudo eliminar la imagen.')
+                    
+        except Exception as e:
+            self.show_error_dialog(f'Error al eliminar imagen: {str(e)}')
+            
+    def try_pkexec_delete(self, file_path):
+        """Try to delete file using pkexec"""
+        try:
+            result = subprocess.run([
+                'pkexec', 'rm', file_path
+            ], capture_output=True, text=True)
+            
+            return result.returncode == 0
+        except Exception as e:
+            print(f"pkexec delete failed: {e}")
+            return False
         
     def get_current_background(self):
         """Obtener el fondo actual del archivo de configuración"""
