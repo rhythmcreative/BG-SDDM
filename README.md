@@ -111,7 +111,7 @@ ls /usr/share/sddm/themes/sddm-astronaut-theme/ && echo "✅ Tema SDDM encontrad
 #### 1️⃣ Desde Rofi (Recomendado)
 ```bash
 # Abre Rofi con tu combinación configurada
-Super + A  # (o tu combinación personal)
+Super + A  # este es en mi caso
 # Busca: "BG-SDDM"
 # Presiona Enter
 ```
