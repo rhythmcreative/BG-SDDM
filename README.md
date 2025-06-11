@@ -111,7 +111,7 @@ ls /usr/share/sddm/themes/sddm-astronaut-theme/ && echo "✅ Tema SDDM encontrad
 #### 1️⃣ Desde Rofi (Recomendado)
 ```bash
 # Abre Rofi con tu combinación configurada
-Super + A  # este es en mi caso
+Super + A  # (o tu combinación personal)
 # Busca: "BG-SDDM"
 # Presiona Enter
 ```
@@ -320,6 +320,23 @@ git push origin feature/nueva-caracteristica
 
 ---
 
+## 🚀 Roadmap
+
+### 📅 **Próximas Características**
+- [ ] 🌙 **Modo Oscuro/Claro**: Seguir tema del sistema
+- [ ] 🔄 **Auto-rotación**: Cambio automático de fondos
+- [ ] ☁️ **Soporte en la Nube**: Integración con servicios online
+- [ ] 🎨 **Editor de Temas**: Personalización avanzada
+- [ ] 📱 **Versión Web**: Interfaz web para gestión remota
+- [ ] 🔌 **Plugins**: Sistema de extensiones
+
+### 🎯 **Versiones Planeadas**
+- **v2.0**: Refactorización completa con nuevas características
+- **v2.1**: Soporte multi-tema
+- **v2.2**: Integración con gestores de ventanas populares
+
+---
+
 ## ⚖️ Licencia
 
 ```
@@ -363,6 +380,6 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 ---
 
 <div align="center">
-  <h3>✨ Hecho con ❤️ por rhythmcreative ✨</h3>
+  <h3>✨ Hecho con ❤️ por RhythmCreative ✨</h3>
   <p>Si este proyecto te ha sido útil, ¡considera darle una ⭐!</p>
 </div>
