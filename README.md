@@ -382,6 +382,6 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 ---
 
 <div align="center">
-  <h3>✨ Hecho con ❤️ por RhythmCreative ✨</h3>
+  <h3>✨ Hecho con ❤️ por rhythmcreative ✨</h3>
   <p>Si este proyecto te ha sido útil, ¡considera darle una ⭐!</p>
 </div>
